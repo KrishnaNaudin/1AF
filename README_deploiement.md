@@ -58,7 +58,7 @@ réponse. À régénérer avec `build_site.py` quand le pool et les grilles de n
 ## Étape B — publier (GitHub Pages)
 Le dépôt `1AF` est créé et poussé par K. Naudin (commandes PowerShell dans la
 conversation du 31/10/2026 ou via GitHub Desktop). `index.html` à la **racine**.
-Settings → Pages → branche `main`, dossier `/ (root)`. URL : `https://<compte>.github.io/1AF/`.
+Settings → Pages → branche `main`, dossier `/ (root)`. URL : `https://krishnanaudin.github.io/1AF/` (compte GitHub **KrishnaNaudin**, PAS le compte perso).
 
 ## Étape C — test à blanc (obligatoire avant l'atelier)
 1. `?ev=01` : remplir le profil, UNE question complète, « Save this question » → vérifier dans le
