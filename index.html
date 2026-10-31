@@ -1,0 +1,309 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgroecologIA evaluation — One Acre Fund Rwanda</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<style>
+:root{--dark:#06292B;--green:#0CA536;--lime:#94C11E;--dgreen:#005E29;--magenta:#E41B8F;--bg:#f4f6f5;--card:#fff;--border:#d9e0dd;--txt:#1c2b29;--muted:#5b6b67;--warn:#c23b3b}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--txt);line-height:1.45}
+header{position:sticky;top:0;z-index:10;background:var(--dark);color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+header .t{font-weight:600;font-size:15px}header .b{font-size:12px;background:var(--magenta);padding:3px 8px;border-radius:20px}
+#sync{font-size:11px;padding:3px 8px;border-radius:20px;background:#3a4f4c;color:#dfe}#sync.ok{background:var(--green)}#sync.err{background:var(--warn)}#sync.busy{background:#e0a800;color:#3a2b00}
+.testbanner{background:#e0a800;color:#3a2b00;text-align:center;font-weight:700;padding:6px;font-size:13px}
+main{max-width:860px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin:16px 0;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+h1{font-size:20px;margin:.2em 0}h2{font-size:17px;color:var(--dgreen);margin:.1em 0 .5em;border-left:4px solid var(--lime);padding-left:10px}
+.step{font-weight:700;color:var(--dark);background:var(--lime);display:inline-block;padding:2px 10px;border-radius:6px;margin:.4em 0;font-size:13px}
+h3{font-size:15px;margin:1em 0 .3em}.sub{font-weight:700;color:var(--dgreen);margin-top:1.1em}.muted{color:var(--muted);font-size:12.5px}
+.prog{font-size:12px;color:var(--muted);margin:.3em 0}
+.qbox{padding:14px;background:#eef5ef;border:1px solid var(--border);border-radius:10px;font-size:15px;font-weight:600}
+.field{margin:.55em 0;font-size:14px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.field label{font-weight:600}.field input[type=text]{border:none;border-bottom:1px dotted #888;min-width:120px;font:inherit;flex:1}
+.opts{display:flex;gap:6px;flex-wrap:wrap}.opt{border:1px solid var(--border);border-radius:8px;padding:6px 11px;cursor:pointer;font-size:13px;background:#fff}
+.opt.on{background:var(--lime);border-color:var(--dgreen);color:var(--dark);font-weight:700}
+.know .opt{flex:1;min-width:90px;text-align:center}
+table.nug{width:100%;border-collapse:collapse;margin-top:6px;font-size:13px}.nug th,.nug td{border:1px solid var(--border);padding:5px;text-align:center}
+.nug td.tx{text-align:left}.nug td.idc{font-weight:700;color:var(--dgreen)}.nug th{background:#eef2f0;font-size:12px}
+.chip{display:inline-block;width:26px;height:26px;border-radius:50%;border:2px solid #bcc7c3;cursor:pointer;vertical-align:middle}
+.chip.on{background:var(--green);border-color:var(--dgreen)}.chip[data-v="R"].on{background:#c23b3b;border-color:#8f2a2a}.chip[data-v="P"].on{background:#e0a800;border-color:#a87b00}.nug td textarea,.nm textarea{width:100%;min-height:56px;border:1px solid var(--border);border-radius:6px;font:inherit;font-size:13px;padding:6px;resize:vertical}
+.chip.wide{width:auto;height:auto;border-radius:8px;padding:7px 10px;font-size:13px;font-weight:700;color:var(--txt)}.chip.wide.on{color:#fff}
+.resp{border:1px solid var(--border);border-radius:10px;margin:10px 0;overflow:hidden}
+.resp .lab{display:flex;justify-content:space-between;align-items:center;font-weight:700;color:#fff;background:var(--green);padding:8px 14px}.resp.B .lab{background:var(--dgreen)}
+.resp .scroll{max-height:420px;overflow:auto;padding:14px;font-size:13.5px;background:#fbfcfb}
+.resp .scroll h1,.resp .scroll h2,.resp .scroll h3,.resp .scroll h4{color:var(--dgreen);margin:.7em 0 .2em;font-size:14px}.resp .scroll p{margin:.35em 0}.resp .scroll ul{margin:.2em 0 .2em 1.1em}.resp .scroll hr{border:none;border-top:1px dashed var(--border)}
+.resp .scroll table{border-collapse:collapse;font-size:12px}.resp .scroll td,.resp .scroll th{border:1px solid var(--border);padding:4px}
+.qual{margin:8px 0}.qual .c{font-weight:700;font-size:14px}.qual .d{font-size:12.5px;color:var(--muted);margin-bottom:3px}
+.scalewrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.anchor{font-size:10.5px;color:var(--muted);white-space:nowrap;min-width:60px}.anchor.r{text-align:right}
+.scale{display:flex;gap:4px;flex-wrap:wrap}.scale .opt{min-width:30px;text-align:center;padding:6px 7px}
+.btn{background:var(--green);color:#fff;border:none;border-radius:10px;padding:12px 20px;font-size:15px;font-weight:600;cursor:pointer}.btn.sec{background:#fff;color:var(--dgreen);border:1px solid var(--dgreen)}
+.btn:disabled{opacity:.5}
+.nav{display:flex;justify-content:space-between;gap:10px;margin:18px 0;flex-wrap:wrap}
+.footer-rem{position:sticky;bottom:0;background:#eef2f0;border-top:1px solid var(--border);font-size:12px;color:var(--muted);text-align:center;padding:6px}
+.nug-mobile{display:none}pre{background:var(--dark);color:#cdeccf;padding:12px;border-radius:8px;overflow:auto;font-size:12px}
+.evgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:12px}
+.evgrid a{display:block;text-align:center;text-decoration:none;background:var(--green);color:#fff;font-weight:700;padding:12px;border-radius:10px}.evgrid a.res{background:#8aa39c}
+.qmenu{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.qrow{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;background:#fff}
+.qrow:hover{border-color:var(--green);background:#f0faf2}.qrow .qc{font-weight:700;color:var(--green);min-width:40px}.qrow .qe{flex:1;font-size:13.5px}
+.qrow .done{font-size:11px;background:var(--green);color:#fff;padding:2px 8px;border-radius:10px;white-space:nowrap}
+.qrow .part{font-size:11px;background:#e0a800;color:#3a2b00;padding:2px 8px;border-radius:10px;white-space:nowrap}
+.qrow .todo{font-size:11px;color:var(--muted);white-space:nowrap}
+.addbtn{background:#fff;color:var(--dgreen);border:1px dashed var(--dgreen);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:13px;margin-top:6px}
+.missing{background:#fff4e5;border:1px solid #e0a800;border-radius:8px;padding:10px;font-size:13px;margin:10px 0}
+@media(max-width:600px){table.nug{display:none}.nug-mobile{display:block}.nm{border:1px solid var(--border);border-radius:8px;padding:10px;margin:8px 0;background:#fff}.nm .tx{font-size:13.5px;margin-bottom:8px}.nm .row{display:flex;gap:6px;flex-wrap:wrap}.nm .row .chip{flex:1;min-width:64px;text-align:center}}
+</style></head><body>
+<div class="testbanner" id="testbanner" style="display:none">TEST VERSION — provisional content, data will be discarded</div>
+<header><span class="t" id="htitle">Evaluation form · CRESI AgroecologIA</span><span id="sync">not saved</span><span class="b" id="evtag"></span></header>
+<main id="app"></main>
+<div class="footer-rem" id="rem"></div>
+
+<script src="config.js"></script>
+<script src="content.js"></script>
+<script src="plan.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   GUARD-RAILS (lesson of the Oléiculture workshop, where one evaluator's answers were lost):
+   1. Every change is saved locally (localStorage) AND pushed to the server (Apps Script)
+      a few seconds later — not only at the final "Submit". The server keeps the last
+      full state per evaluator + a journal of every push.
+   2. On load, the state is restored from the server if it is newer than the local copy
+      (works after a cleared browser, a crash, or a change of device).
+   3. Each question has an explicit "Save this question ✓" button that forces a push and
+      shows what is still missing; the menu shows complete / partial / to do.
+   4. "Submit" only marks the evaluation as finished; nothing depends on it anymore.
+   5. A JSON backup can be downloaded at any time; e-mail fallback shown on any error.
+   ═══════════════════════════════════════════════════════════════════════ */
+var CFG=window.CONFIG, C=window.CONTENT;
+var QIDS=Object.keys(C);
+var SLOTS=["A","B"];
+var CRIT=[["Relevance","Does the answer address the question asked?","off-topic","fully relevant"],
+ ["Clarity","Is the answer easy to understand?","confusing","very clear"],
+ ["Actionability","Could the advice be applied in the field?","vague","directly applicable"],
+ ["Trust","Would you rely on this answer to advise a farmer?","not at all","completely"],
+ ["Length","Is the length appropriate?  (1 = too short · 3 = appropriate · 5 = too long)","too short","too long"]];
+var COLS=[["V","Essential"],["U","Useful"],["O","Optional"],["R","Remove"]];
+var NUGCOLS=[["V","Essential"],["U","Useful"],["O","Optional"],["R","Remove"],["P","Unclear"]];
+var SCALE=[1,1.5,2,2.5,3,3.5,4,4.5,5];
+var MAXADD=10;
+var PROFILE=["p_code","p_sexe","p_date","p_lieu","p_struct","p_spe","p_exp","p_dip","p_fam","p_agent","p_agent_autre","p_conf","p_conf_raison"];
+document.getElementById('htitle').textContent="Evaluation form · "+(CFG.TITRE||"AgroecologIA");
+if(CFG.TEST_MODE)document.getElementById('testbanner').style.display='block';
+
+var params=new URLSearchParams(location.search);
+var EV=params.get('ev'); if(EV){EV=EV.replace(/[^0-9]/g,''); if(EV.length===1)EV='0'+EV;}
+var PL=(window.PLAN&&EV&&window.PLAN[EV])||null;
+if(PL&&PL.order){QIDS=PL.order.filter(function(q){return C[q];});}
+var app=document.getElementById('app'), rem=document.getElementById('rem'), evtag=document.getElementById('evtag'), syncEl=document.getElementById('sync');
+var store={}, LSKEY="";
+
+/* ── local save + server push (debounced) ─────────────────────────────── */
+var _lsOK=true, _pushTimer=null, _dirty=false, _lastPushOK=null;
+function save(){
+ store._updated=new Date().toISOString();
+ try{localStorage.setItem(LSKEY,JSON.stringify(store))}catch(e){if(_lsOK){_lsOK=false;alert("⚠ Local storage unavailable: your answers are still sent to the server after each change, but will not survive a page reload on this device.")}}
+ _dirty=true; setSync('busy','saving…');
+ if(_pushTimer)clearTimeout(_pushTimer);
+ _pushTimer=setTimeout(function(){push('autosave')},2500);
+}
+function setSync(cls,txt){syncEl.className=cls;syncEl.textContent=txt;}
+function push(kind,cb){
+ if(!CFG.ENDPOINT){setSync('','no endpoint (test)');_dirty=false;if(cb)cb(true);return;}
+ var payload=buildPayload(kind);
+ var ctrl=typeof AbortController!=='undefined'?new AbortController():null;
+ var timer=ctrl?setTimeout(function(){ctrl.abort()},30000):null;
+ var opts={method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)};
+ if(ctrl)opts.signal=ctrl.signal;
+ setSync('busy','sending…');
+ fetch(CFG.ENDPOINT,opts)
+  .then(function(r){if(timer)clearTimeout(timer);return r.text();})
+  .then(function(t){var j=null;try{j=JSON.parse(t)}catch(e){} if(!j||!j.ok)throw new Error((j&&j.error)||"unexpected reply");
+    _dirty=false;_lastPushOK=new Date();setSync('ok','saved '+_lastPushOK.toTimeString().slice(0,5));if(cb)cb(true);})
+  .catch(function(err){setSync('err','NOT saved on server');if(cb)cb(false,err);});
+}
+window.addEventListener('beforeunload',function(e){if(_dirty&&CFG.ENDPOINT){push('autosave');}});
+setInterval(function(){if(_dirty&&CFG.ENDPOINT)push('autosave');},45000);   // belt and braces
+
+/* ── restore from server (newer than local) ───────────────────────────── */
+function restoreFromServer(cb){
+ if(!CFG.ENDPOINT){cb();return;}
+ var url=CFG.ENDPOINT+(CFG.ENDPOINT.indexOf('?')>0?'&':'?')+'action=state&atelier='+encodeURIComponent(CFG.ATELIER)+'&ev='+EV+'&_='+Date.now();
+ var done=false; var t=setTimeout(function(){if(!done){done=true;cb();}},8000);
+ fetch(url,{redirect:"follow"}).then(function(r){return r.json()}).then(function(j){
+   if(done)return; done=true; clearTimeout(t);
+   if(j&&j.ok&&j.state&&j.state._updated&&(!store._updated||j.state._updated>store._updated)){
+     store=j.state; try{localStorage.setItem(LSKEY,JSON.stringify(store))}catch(e){}
+     setSync('ok','restored from server');
+   }
+   cb();
+ }).catch(function(){if(!done){done=true;clearTimeout(t);cb();}});
+}
+
+/* ── widgets ──────────────────────────────────────────────────────────── */
+window.ta=function(el){store[el.dataset.k]=el.value;save()};
+window.opt=function(el){store[el.dataset.g]=el.dataset.v;el.parentNode.querySelectorAll('.opt').forEach(function(o){o.classList.toggle('on',o===el)});save()};
+window.pick=function(el){var g=el.dataset.g,v=el.dataset.v;store[g]=v;document.querySelectorAll('[data-g="'+g+'"]').forEach(function(c){c.classList.toggle('on',c.dataset.v===v)});save()};
+window.multi=function(el){var g=el.dataset.g,v=el.dataset.v;var cur=(store[g]||"").split(";").filter(Boolean);var i=cur.indexOf(v);if(i>=0)cur.splice(i,1);else cur.push(v);store[g]=cur.join(";");el.classList.toggle('on',i<0);save()};
+function esc(s){return String(s).replace(/"/g,'&quot;')}
+function txt(k,ph){var v=store[k]?(' value="'+esc(store[k])+'"'):'';return '<input type="text" data-k="'+k+'" oninput="ta(this)" placeholder="'+(ph||'')+'"'+v+'>'}
+function tarea(k,ph){var v=store[k]?esc(store[k]):'';return '<textarea data-k="'+k+'" oninput="ta(this)" placeholder="'+(ph||'')+'">'+v+'</textarea>'}
+function optset(group,vals,extra){return '<span class="opts '+(extra||'')+'">'+vals.map(function(v){return '<span class="opt'+(store[group]===v?' on':'')+'" data-g="'+group+'" data-v="'+v+'" onclick="opt(this)">'+v+'</span>'}).join('')+'</span>'}
+function multiset(group,vals){var cur=(store[group]||"").split(";");return '<span class="opts">'+vals.map(function(v){return '<span class="opt'+(cur.indexOf(v)>=0?' on':'')+'" data-g="'+group+'" data-v="'+v+'" onclick="multi(this)">'+v+'</span>'}).join('')+'</span>'}
+function scale(group,low,high){return '<div class="scalewrap"><span class="anchor">'+low+'</span><div class="scale">'
+  +SCALE.map(function(v){return '<span class="opt'+(store[group]==v?' on':'')+'" data-g="'+group+'" data-v="'+v+'" onclick="opt(this)">'+v+'</span>'}).join('')
+  +'</div><span class="anchor r">'+high+'</span></div>'}
+
+/* ── screens ──────────────────────────────────────────────────────────── */
+function landing(){
+ evtag.textContent=""; rem.textContent="";
+ var btns="";for(var i=1;i<=(CFG.N_EVAL||45);i++){var n=(i<10?'0':'')+i;var res=window.PLAN&&window.PLAN[n]&&window.PLAN[n].reserve;btns+='<a class="'+(res?'res':'')+'" href="?ev='+n+'">Evaluator '+n+(res?' (reserve)':'')+'</a>';}
+ app.innerHTML='<div class="card"><h1>Evaluation workshop — '+(CFG.TITRE||'')+'</h1>'
+  +'<p>Select your evaluator number (or scan the QR code you were given). Evaluators 41–45 are reserve numbers: use them only if the facilitator tells you to.</p>'
+  +'<div class="evgrid">'+btns+'</div></div>';
+}
+function setHeadFoot(extra){ evtag.textContent="Evaluator "+EV; rem.textContent="Evaluator "+EV+(extra?" · "+extra:"")+" · "+(CFG.ATELIER||""); }
+
+function profil(){
+ app.innerHTML='<div class="card"><h1>Evaluation form — Evaluator no. '+EV+'</h1>'
+ +'<p class="muted">CRESI AgroecologIA · One Acre Fund (Tubura) Rwanda · two AI assistants compared per question (A / B), blind. You will evaluate <b>3 questions</b>, each with 2 answers.</p>'
+ +'<p class="muted">Your answers are saved automatically on this device and on the server after every change (see the indicator at the top).</p>'
+ +'<h3>■ Evaluator profile</h3>'
+ +'<p class="muted">No name is collected. Your evaluator number is the only identifier.</p>'
+ +'<div class="field"><label>Evaluator code:</label>'+txt('p_code')+'</div>'
+ +'<div class="field"><label>Sex:</label>'+optset('p_sexe',["M","F"])+'<label>Date:</label>'+txt('p_date')+'<label>Place:</label>'+txt('p_lieu')+'</div>'
+ +'<div class="field"><label>Structure / Organisation:</label>'+txt('p_struct')+'</div>'
+ +'<div class="field"><label>Speciality:</label>'+txt('p_spe')+'</div>'
+ +'<div class="field"><label>Professional experience:</label>'+optset('p_exp',["0 (none)","1 (1-5 years)","2 (>5 years)"])+'</div>'
+ +'<div class="field"><label>Level of education:</label>'+optset('p_dip',["Primary","Secondary","Technical diploma","Bachelor","Master / Eng.","PhD"])+'</div>'
+ +'<div class="field"><label>Familiarity with generative AI:</label>'+optset('p_fam',["Never used","Already tried","Use it regularly","Private use only"])+'</div>'
+ +'<div class="field"><label>If you have used generative AI — which tool:</label>'+optset('p_agent',["ChatGPT","Gemini","MetaAI","Other"])+txt('p_agent_autre','other…')+'</div>'
+ +'<div class="field"><label>Trust in generative AI:</label>'+optset('p_conf',["Generally yes","Rather no","It depends"])+'<label>Reason:</label>'+txt('p_conf_raison')+'</div>'
+ +'<div class="nav"><span></span><button class="btn" onclick="goMenu()">Continue →</button></div></div>';
+ window.scrollTo(0,0);
+}
+
+/* completeness of one question: nuggets all voted + both answers rated on all criteria */
+function qStatus(qid){
+ var miss=[]; var ct=C[qid];
+ if(!store['know_'+qid])miss.push("your knowledge of the topic");
+ var nv=ct.nuggets.filter(function(n){return !store['nug_'+qid+'_'+n.id]}).length; if(nv)miss.push(nv+" nugget(s) not rated");
+ SLOTS.forEach(function(s){CRIT.forEach(function(c){if(!store['qual'+s+'_'+qid+'_'+c[0]])miss.push("Answer "+s+": "+c[0]);});});
+ var any=!!store['know_'+qid]||ct.nuggets.some(function(n){return store['nug_'+qid+'_'+n.id]})||SLOTS.some(function(s){return CRIT.some(function(c){return store['qual'+s+'_'+qid+'_'+c[0]]})});
+ return {complete:miss.length===0, started:any, missing:miss};
+}
+function menu(){
+ var rows=QIDS.map(function(qid,i){var st=qStatus(qid);
+   return '<div class="qrow" onclick="openQ(\''+qid+'\')"><span class="qc">'+(i+1)+'</span><span class="qe">'+C[qid].enonce+'</span>'
+   +(st.complete?'<span class="done">✓ complete</span>':(st.started?'<span class="part">partial</span>':'<span class="todo">to do</span>'))+'</div>';}).join('');
+ var n=QIDS.filter(function(q){return qStatus(q).complete}).length;
+ app.innerHTML='<div class="card"><h1>Your 3 questions</h1>'
+  +'<p class="muted">Evaluator no. '+EV+' · please evaluate them in the order shown. Complete: <b>'+n+' / '+QIDS.length+'</b>.</p>'
+  +'<div class="qmenu">'+rows+'</div>'
+  +'<div class="nav"><button class="btn sec" onclick="go(\'profil\')">← Profile</button><button class="btn" onclick="go(\'submit\')">Finish and submit ('+n+'/'+QIDS.length+') →</button></div></div>';
+ setHeadFoot("menu"); window.scrollTo(0,0);
+}
+function mapFor(qid){
+ if(PL&&PL.ab&&PL.ab[qid])return PL.ab[qid];
+ if(!store['map_'+qid]){var keys=Object.keys(C[qid].resp);var a=keys[Math.floor(Math.random()*keys.length)],b=keys.filter(function(k){return k!==a})[0];store['map_'+qid]={A:a,B:b};save();}
+ return store['map_'+qid];
+}
+function question(qid){
+ var ct=C[qid], map=mapFor(qid), idx=QIDS.indexOf(qid);
+ var rows=ct.nuggets.map(function(n){return '<tr><td class="idc">'+n.id+'</td><td class="tx">'+n.t+'</td>'
+   +NUGCOLS.map(function(c){var g='nug_'+qid+'_'+n.id;return '<td><span class="chip'+(store[g]===c[0]?' on':'')+'" data-g="'+g+'" data-v="'+c[0]+'" onclick="pick(this)"></span></td>'}).join('')+'</tr>'}).join('');
+ var mob=ct.nuggets.map(function(n){return '<div class="nm"><div class="tx"><b>'+n.id+'</b> — '+n.t+'</div><div class="row">'
+   +NUGCOLS.map(function(c){var g='nug_'+qid+'_'+n.id;return '<span class="chip wide'+(store[g]===c[0]?' on':'')+'" data-g="'+g+'" data-v="'+c[0]+'" onclick="pick(this)">'+c[1]+'</span>'}).join('')+'</div></div>'}).join('');
+ var nAdd=store['addn_'+qid]||1; if(nAdd>MAXADD)nAdd=MAXADD;
+ var adds='<table class="nug"><thead><tr><th>#</th><th class="tx">Missing information (free addition)</th><th>Essential</th><th>Useful</th><th>Optional</th><th>Remove</th></tr></thead><tbody>';
+ for(var i=1;i<=nAdd;i++){adds+='<tr><td class="idc">'+i+'</td><td class="tx">'+tarea('add'+i+'_'+qid+'_txt','important information missing from the list…')+'</td>'
+   +COLS.map(function(c){var g='add'+i+'_'+qid;return '<td><span class="chip'+(store[g]===c[0]?' on':'')+'" data-g="'+g+'" data-v="'+c[0]+'" onclick="pick(this)"></span></td>'}).join('')+'</tr>';}
+ adds+='</tbody></table><div class="nug-mobile">';
+ for(var j=1;j<=nAdd;j++){adds+='<div class="nm"><div class="tx"><b>'+j+'.</b> '+tarea('add'+j+'_'+qid+'_txt','important information missing…')+'</div><div class="row">'
+   +COLS.map(function(c){var g='add'+j+'_'+qid;return '<span class="chip wide'+(store[g]===c[0]?' on':'')+'" data-g="'+g+'" data-v="'+c[0]+'" onclick="pick(this)">'+c[1]+'</span>'}).join('')+'</div></div>';}
+ adds+='</div>';
+ if(nAdd<MAXADD)adds+='<button class="addbtn" onclick="addMore(\''+qid+'\')">+ Add an item ('+nAdd+'/'+MAXADD+')</button>';
+ function qual(ab){return CRIT.map(function(c){return '<div class="qual"><div class="c">'+c[0]+'</div><div class="d">'+c[1]+'</div>'+scale('qual'+ab+'_'+qid+'_'+c[0],c[2],c[3])+'</div>'}).join('')}
+ function respBlock(slot){return '<div class="resp '+slot+'"><div class="lab"><span>ANSWER '+slot+'</span></div><div class="scroll">'+marked.parse(ct.resp[map[slot]]||'')+'</div></div>'
+   +'<div class="sub">Quality rating — Answer '+slot+' <span class="muted">(1 → 5, half points allowed)</span></div>'+qual(slot);}
+
+ app.innerHTML='<div class="card"><div class="prog">Question '+(idx+1)+' of '+QIDS.length+' · '+qid+'</div><h2>Question</h2><div class="qbox">'+ct.enonce+'</div>'
+ +'<div class="sub">Your knowledge of THIS topic <span class="muted">(one box)</span></div>'+optset('know_'+qid,["Not my field","Some notions","Good command","Expert / reference"],"know")+'</div>'
+ +'<div class="card"><span class="step">Step 1 — Nugget grid</span><p class="muted">A nugget is one piece of information found in the AI answers. For each line tick <b>one box</b>: Essential · Useful · Optional · Remove (redundant / off-topic / wrong) · Unclear.</p>'
+ +'<table class="nug"><thead><tr><th>ID</th><th class="tx">Information (nugget)</th><th>Essential</th><th>Useful</th><th>Optional</th><th>Remove</th><th>Unclear</th></tr></thead><tbody>'+rows+'</tbody></table><div class="nug-mobile">'+mob+'</div>'
+ +'<div class="sub">■ Free additions — important information missing from the grid</div><p class="muted">Add missing items (up to '+MAXADD+') and tick one box per item.</p>'+adds+'</div>'
+ +'<div class="card"><span class="step">Step 2 — Read and rate the two answers (A and B, random order)</span>'
+ +respBlock('A')+respBlock('B')+'</div>'
+ +'<div id="qmsg"></div>'
+ +'<div class="nav"><button class="btn sec" onclick="go(\'menu\')">← Back to the list</button><button class="btn" onclick="validateQ(\''+qid+'\')">Save this question ✓</button></div>';
+ setHeadFoot("question "+(idx+1)+"/"+QIDS.length); window.scrollTo(0,0);
+}
+window.validateQ=function(qid){
+ var st=qStatus(qid), box=document.getElementById('qmsg');
+ if(!st.complete){box.innerHTML='<div class="missing"><b>Still missing for this question:</b><ul><li>'+st.missing.join('</li><li>')+'</li></ul>You can go back to the list anyway; the question will be shown as <i>partial</i>.</div>';
+   box.innerHTML+='<div class="nav"><button class="btn sec" onclick="go(\'menu\')">Back to the list anyway</button></div>'; window.scrollTo(0,document.body.scrollHeight); push('question'); return;}
+ push('question',function(ok,err){ if(!ok){box.innerHTML='<div class="missing">Saved on this device, but the server could not be reached ('+(err&&err.message)+'). Continue — it will be retried automatically; you can also download a backup from the final screen.</div>';}
+   menu(); });
+};
+window.addMore=function(qid){var n=store['addn_'+qid]||1;store['addn_'+qid]=Math.min(MAXADD,n+1);save();question(qid);};
+window.openQ=function(qid){question(qid);};
+
+function submitScreen(){
+ var done=QIDS.filter(function(q){return qStatus(q).complete});
+ var partial=QIDS.filter(function(q){var s=qStatus(q);return s.started&&!s.complete});
+ var offline=!navigator.onLine;
+ app.innerHTML='<div class="card"><h1>Finish your evaluation</h1>'
+ +(offline?'<p style="color:var(--warn);font-weight:700">⚠ You are offline. Your answers are kept on this device; they will be sent when you are back online. You can also download a backup.</p>':'')
+ +'<p>Complete: <b>'+done.length+'</b> / '+QIDS.length+' question(s)'+(partial.length?' · partial: '+partial.length:'')+'.</p>'
+ +(partial.length?'<p class="muted">You can go back and finish the partial questions, or submit as is.</p>':'')
+ +'<div id="sendmsg"></div>'
+ +'<div class="nav"><button class="btn sec" onclick="go(\'menu\')">← Back to the list</button>'
+ +'<button class="btn sec" onclick="dlBackup()">Download a backup (.json)</button>'
+ +'<button class="btn" id="sendbtn" onclick="sendData()"'+((done.length||partial.length)?'':' disabled')+'>Submit my evaluation ✓</button></div></div>';
+ setHeadFoot("submit"); window.scrollTo(0,0);
+}
+function buildPayload(kind){
+ var prof={};PROFILE.forEach(function(k){prof[k]=store[k]||""});
+ var qs=QIDS.map(function(qid){var map=mapFor(qid), st=qStatus(qid);
+   var nug={};C[qid].nuggets.forEach(function(n){nug[n.id]=store['nug_'+qid+'_'+n.id]||""});
+   var adds=[];for(var i=1;i<=MAXADD;i++){if(store['add'+i+'_'+qid+'_txt'])adds.push({texte:store['add'+i+'_'+qid+'_txt'],niveau:store['add'+i+'_'+qid]||''})}
+   var out={qid:qid,ordre:QIDS.indexOf(qid)+1,statut:st.complete?"complete":(st.started?"partial":"empty"),connaissance:store['know_'+qid]||"",nuggets:nug,ajouts_libres:adds};
+   SLOTS.forEach(function(slot){var q={};CRIT.forEach(function(c){q[c[0]]=store['qual'+slot+'_'+qid+'_'+c[0]]||''});
+     out['qualite_'+slot]=q; out['systeme_'+slot]=map[slot]; out['id_'+slot]=(C[qid].respId||{})[map[slot]]||"";});
+   return out;});
+ return {atelier:CFG.ATELIER,evaluateur:EV,kind:kind||"autosave",horodatage:new Date().toISOString(),updated:store._updated||"",finished:!!store._submitted,profil:prof,questions:qs,state:store};
+}
+window.sendData=function(){
+ var msg=document.getElementById('sendmsg'), btn=document.getElementById('sendbtn');
+ if(!CFG.ENDPOINT){msg.innerHTML='<pre>'+JSON.stringify(buildPayload('final'),null,2).replace(/</g,'&lt;')+'</pre><p class="muted">(No ENDPOINT configured: preview of what would be sent.)</p>';return;}
+ btn.disabled=true; msg.innerHTML='<p>Sending… (up to 30 seconds)</p>';
+ store._submitted=new Date().toISOString(); try{localStorage.setItem(LSKEY,JSON.stringify(store))}catch(e){}
+ push('final',function(ok,err){
+  if(ok){app.innerHTML='<div class="card"><h1>Thank you — your evaluation is submitted ✅</h1><p>Everything was received. A copy stays on this device.</p><button class="btn sec" onclick="dlBackup()">Download a backup</button></div>';}
+  else{delete store._submitted; try{localStorage.setItem(LSKEY,JSON.stringify(store))}catch(e){} btn.disabled=false;
+   msg.innerHTML='<p style="color:var(--warn)">Sending failed ('+(err&&err.message)+'). Your answers are kept on this device and most of them were already saved on the server during the evaluation.</p>'
+    +'<p>Please download the backup and e-mail it to <b>'+(CFG.CONTACT||'')+'</b>:</p><button class="btn sec" onclick="dlBackup()">Download the backup (.json)</button>';}
+ });
+}
+window.dlBackup=function(){
+ var blob=new Blob([JSON.stringify(buildPayload('backup'),null,2)],{type:"application/json"});
+ var a=document.createElement("a");a.href=URL.createObjectURL(blob);
+ a.download="evaluation_"+CFG.ATELIER+"_ev"+EV+"_"+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+".json";
+ a.click();URL.revokeObjectURL(a.href);
+}
+window.go=function(s){ if(s==='profil')profil(); else if(s==='menu')menu(); else if(s==='submit')submitScreen(); };
+window.goMenu=function(){menu();};
+
+function start(){
+ if(!C||!Object.keys(C).length){app.innerHTML='<div class="card"><h1>Loading error</h1><p>The questionnaire data could not be loaded. Check your connection and reload the page.</p><button class="btn" onclick="location.reload()">Reload</button></div>';return;}
+ if(!EV){landing();return;}
+ if(!PL){app.innerHTML='<div class="card"><h1>Unknown evaluator number</h1><p>No plan exists for evaluator '+EV+'. Please check your QR code or ask the facilitator.</p><a class="btn" href="./">Back</a></div>';return;}
+ LSKEY="rw_"+(CFG.ATELIER||"atelier")+"_"+EV;
+ try{var raw=localStorage.getItem(LSKEY);store=JSON.parse(raw||"{}");} catch(e){store={};}
+ try{localStorage.setItem("_test","1");localStorage.removeItem("_test");}catch(e){_lsOK=false;}
+ app.innerHTML='<div class="card"><p>Loading your evaluation…</p></div>';
+ restoreFromServer(function(){
+   if(store._submitted){app.innerHTML='<div class="card"><h1>Evaluation already submitted ✅</h1><p>Your answers were submitted on '+store._submitted.slice(0,10)+'. To change something, contact '+(CFG.CONTACT||'')+'.</p><button class="btn sec" onclick="dlBackup()">Download a backup</button> <button class="btn sec" onclick="reopen()">Reopen (facilitator only)</button></div>';return;}
+   profil();
+ });
+}
+window.reopen=function(){if(confirm("Reopen this evaluation for editing?")){delete store._submitted;save();profil();}};
+start();
+</script></body></html>
