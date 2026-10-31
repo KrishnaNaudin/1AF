@@ -9,13 +9,15 @@ Entrées (Plan_experimental/) :
   reponses_deepermind/*.json  réponses DeeperMind (Q0X_<modele>_{RAG,noRAG}.json)
   ../Methodo_nuggets/grilles/grille_nuggets_Q0X.csv   (optionnel : si absent → nuggets de démonstration)
 
-Sorties (site_rwanda/) : content.js, plan.js, cle_devoilement.csv (CONFIDENTIEL, hors site)
+Sorties (site_rwanda/) : content.js, plan.js
+Sorties CONFIDENTIELLES (Plan_experimental/, jamais dans le dépôt) : cle_devoilement.csv,
+  cle_codes_reponses.csv, sel_codes_reponses.txt
 
 Usage :  python build_site.py <dossier 12_Rwanda_OneAcreFund>
 Tant que les réponses « + corpus » n'existent pas, les systèmes S1 et S3 sont remplacés par
 les réponses sans corpus du même modèle, et chaque réponse est préfixée [PROVISIONAL].
 """
-import csv, json, os, sys, glob
+import csv, json, os, sys, glob, hmac, hashlib, secrets
 
 BASE = sys.argv[1] if len(sys.argv) > 1 else "."
 PE   = os.path.join(BASE, "Plan_experimental")
@@ -31,6 +33,17 @@ for r in csv.DictReader(open(os.path.join(PE, "cle_systemes.csv"), encoding="utf
     SYS[r["code"]] = dict(key=f"{r['modele']}_{'RAG' if rag else 'noRAG'}", modele=r["modele"], rag=rag, label=r["systeme"])
 
 questions = list(csv.DictReader(open(os.path.join(PE, "questions_source.csv"), encoding="utf-8")))
+
+# --- codes opaques des réponses (l'aveugle doit tenir même si on lit le code source du site) ----
+# Chaque (question, système) reçoit un code du type « r3k9xq » dérivé d'un sel SECRET stocké
+# hors du site (Plan_experimental/sel_codes_reponses.txt, créé au premier lancement, à ne jamais publier).
+# Codes stables d'une régénération à l'autre tant que le sel ne change pas.
+SEL_F = os.path.join(PE, "sel_codes_reponses.txt")
+if not os.path.exists(SEL_F):
+    open(SEL_F, "w").write(secrets.token_hex(16))
+SEL = open(SEL_F).read().strip().encode()
+def opaque(qc, code):
+    return "r" + hmac.new(SEL, f"{qc}|{code}".encode(), hashlib.sha256).hexdigest()[:6]
 
 def load_resp(qcode, s):
     """Réponse réelle si elle existe, sinon repli sans corpus (provisoire), sinon None."""
@@ -63,7 +76,8 @@ for q in questions:
         elif prov:
             a = "**[PROVISIONAL — no-corpus response used as a stand-in until the RAG response exists]**\n\n" + a
             provisional.append(f"{qc}:{code}:stand-in")
-        resp[s["key"]] = a; rid[s["key"]] = replyuid
+        k = opaque(qc, code)
+        resp[k] = a; rid[k] = replyuid
     content[qc] = dict(id=qc, enonce=q["question_text"], theme=q["theme"], nuggets=load_nuggets(qc), resp=resp, respId=rid)
 
 with open(os.path.join(OUT, "content.js"), "w", encoding="utf-8") as f:
@@ -76,20 +90,27 @@ for r in csv.DictReader(open(os.path.join(PE, "plan_randomise.csv"), encoding="u
     ev = r["evaluateur"].replace("E", "")
     p = plan.setdefault(ev, dict(order=[], ab={}, reserve=r["reserve"] == "oui"))
     p["order"].append((int(r["ordre_presentation"]), r["question"]))
-    p["ab"][r["question"]] = dict(A=SYS[r["systeme_A"]]["key"], B=SYS[r["systeme_B"]]["key"])
+    p["ab"][r["question"]] = dict(A=opaque(r["question"], r["systeme_A"]), B=opaque(r["question"], r["systeme_B"]))
 for ev, p in plan.items():
     p["order"] = [q for _, q in sorted(p["order"])]
 with open(os.path.join(OUT, "plan.js"), "w", encoding="utf-8") as f:
-    f.write("/* Counterbalanced plan — seed 2026 (Rwanda_plan_randomise.R). A/B ↔ system is CONFIDENTIAL (cle_devoilement.csv). */\nwindow.PLAN = ")
+    f.write("/* Counterbalanced plan — seed 2026. Answer codes are opaque; the key is kept offline. */\nwindow.PLAN = ")
     json.dump(plan, f, ensure_ascii=False); f.write(";\n")
 
 # --- clé de dévoilement (hors site) -----------------------------------------------
 with open(os.path.join(PE, "cle_devoilement.csv"), "w", encoding="utf-8", newline="") as f:
-    w = csv.writer(f); w.writerow(["evaluateur", "question", "slot", "code", "systeme", "replyUID"])
+    w = csv.writer(f); w.writerow(["evaluateur", "question", "slot", "code_site", "code", "systeme", "replyUID"])
     for r in csv.DictReader(open(os.path.join(PE, "plan_randomise.csv"), encoding="utf-8")):
         for slot in ("A", "B"):
-            code = r["systeme_" + slot]; key = SYS[code]["key"]
-            w.writerow([r["evaluateur"], r["question"], slot, code, SYS[code]["label"], content[r["question"]]["respId"].get(key, "")])
+            code = r["systeme_" + slot]; key = opaque(r["question"], code)
+            w.writerow([r["evaluateur"], r["question"], slot, key, code, SYS[code]["label"], content[r["question"]]["respId"].get(key, "")])
+
+# --- table des codes opaques (CONFIDENTIEL, hors site) ------------------------------
+with open(os.path.join(PE, "cle_codes_reponses.csv"), "w", encoding="utf-8", newline="") as f:
+    w = csv.writer(f); w.writerow(["question", "code_site", "code", "systeme", "modele", "RAG"])
+    for q in questions:
+        for code, s in SYS.items():
+            w.writerow([q["code_question"], opaque(q["code_question"], code), code, s["label"], s["modele"], s["rag"]])
 
 print(f"content.js : {len(content)} questions ; plan.js : {len(plan)} évaluateurs ; provisoires : {len(provisional)}")
 for p in provisional: print("  ", p)

@@ -52,6 +52,7 @@ table.nug{width:100%;border-collapse:collapse;margin-top:6px;font-size:13px}.nug
 @media(max-width:600px){table.nug{display:none}.nug-mobile{display:block}.nm{border:1px solid var(--border);border-radius:8px;padding:10px;margin:8px 0;background:#fff}.nm .tx{font-size:13.5px;margin-bottom:8px}.nm .row{display:flex;gap:6px;flex-wrap:wrap}.nm .row .chip{flex:1;min-width:64px;text-align:center}}
 </style></head><body>
 <div class="testbanner" id="testbanner" style="display:none">TEST VERSION — provisional content, data will be discarded</div>
+<div class="testbanner" id="saisiebanner" style="display:none;background:#06292B;color:#fff"></div>
 <header><span class="t" id="htitle">Evaluation form · CRESI AgroecologIA</span><span id="sync">not saved</span><span class="b" id="evtag"></span></header>
 <main id="app"></main>
 <div class="footer-rem" id="rem"></div>
@@ -90,7 +91,13 @@ if(CFG.TEST_MODE)document.getElementById('testbanner').style.display='block';
 
 var params=new URLSearchParams(location.search);
 var EV=params.get('ev'); if(EV){EV=EV.replace(/[^0-9]/g,''); if(EV.length===1)EV='0'+EV;}
-var PL=(window.PLAN&&EV&&window.PLAN[EV])||null;
+/* Paper-booklet data entry: ?ev=07&saisie=1 (first entry, stored as evaluator 07)
+   or ?ev=07&saisie=2 (independent second entry for double-keying, stored as evaluator 507). */
+var SAISIE=params.get('saisie'); if(SAISIE!=='1'&&SAISIE!=='2')SAISIE=null;
+var EVP=EV;                                   // evaluator number printed on the booklet (plan lookup)
+if(EV&&SAISIE==='2')EV=String(500+parseInt(EVP,10));
+var PL=(window.PLAN&&EVP&&window.PLAN[EVP])||null;
+if(SAISIE){var sb=document.getElementById('saisiebanner');sb.style.display='block';sb.textContent='DATA ENTRY FROM PAPER BOOKLET — evaluator '+EVP+' — '+(SAISIE==='2'?'SECOND (check) entry':'first entry')+' — copy exactly what is ticked on paper';}
 if(PL&&PL.order){QIDS=PL.order.filter(function(q){return C[q];});}
 var app=document.getElementById('app'), rem=document.getElementById('rem'), evtag=document.getElementById('evtag'), syncEl=document.getElementById('sync');
 var store={}, LSKEY="";
@@ -101,15 +108,28 @@ function save(){
  store._updated=new Date().toISOString();
  try{localStorage.setItem(LSKEY,JSON.stringify(store))}catch(e){if(_lsOK){_lsOK=false;alert("⚠ Local storage unavailable: your answers are still sent to the server after each change, but will not survive a page reload on this device.")}}
  _dirty=true; setSync('busy','saving…');
+ schedulePush();
+}
+/* autosave: 3 s after the last change, but never more often than every 20 s, never two sends at once */
+var _inflight=false, _lastSend=0, _queued=null;
+function schedulePush(){
  if(_pushTimer)clearTimeout(_pushTimer);
- _pushTimer=setTimeout(function(){push('autosave')},2500);
+ var wait=Math.max(3000, 20000-(Date.now()-_lastSend));
+ _pushTimer=setTimeout(function(){push('autosave')},wait);
 }
 function setSync(cls,txt){syncEl.className=cls;syncEl.textContent=txt;}
 function push(kind,cb){
  if(!CFG.ENDPOINT){setSync('','no endpoint (test)');_dirty=false;if(cb)cb(true);return;}
+ if(_inflight){ _queued={kind:kind,cb:cb}; return; }          // one send at a time, latest state sent next
+ _inflight=true; _lastSend=Date.now(); if(_pushTimer){clearTimeout(_pushTimer);_pushTimer=null;}
+ var sentUpd=store._updated;
+ var userCb=cb; cb=function(ok,err){ _inflight=false;
+   if(ok&&store._updated!==sentUpd){_dirty=true;}               // changed while sending → resend
+   if(userCb)userCb(ok,err);
+   if(_queued){var q=_queued;_queued=null;push(q.kind,q.cb);} else if(_dirty&&ok){schedulePush();} };
  var payload=buildPayload(kind);
  var ctrl=typeof AbortController!=='undefined'?new AbortController():null;
- var timer=ctrl?setTimeout(function(){ctrl.abort()},30000):null;
+ var timer=ctrl?setTimeout(function(){ctrl.abort()},60000):null;
  var opts={method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)};
  if(ctrl)opts.signal=ctrl.signal;
  setSync('busy','sending…');
@@ -117,9 +137,10 @@ function push(kind,cb){
   .then(function(r){if(timer)clearTimeout(timer);return r.text();})
   .then(function(t){var j=null;try{j=JSON.parse(t)}catch(e){} if(!j||!j.ok)throw new Error((j&&j.error)||"unexpected reply");
     _dirty=false;_lastPushOK=new Date();setSync('ok','saved '+_lastPushOK.toTimeString().slice(0,5));if(cb)cb(true);})
-  .catch(function(err){setSync('err','NOT saved on server');if(cb)cb(false,err);});
+  .catch(function(err){if(timer)clearTimeout(timer);setSync('err','NOT saved on server yet (retrying)');if(cb)cb(false,err);});
 }
-window.addEventListener('beforeunload',function(e){if(_dirty&&CFG.ENDPOINT){push('autosave');}});
+window.addEventListener('beforeunload',function(e){if(_dirty&&CFG.ENDPOINT){
+  try{navigator.sendBeacon(CFG.ENDPOINT,new Blob([JSON.stringify(buildPayload('unload'))],{type:'text/plain;charset=utf-8'}));}catch(x){push('autosave');}}});
 setInterval(function(){if(_dirty&&CFG.ENDPOINT)push('autosave');},45000);   // belt and braces
 
 /* ── restore from server (newer than local) ───────────────────────────── */
@@ -154,17 +175,18 @@ function scale(group,low,high){return '<div class="scalewrap"><span class="ancho
 /* ── screens ──────────────────────────────────────────────────────────── */
 function landing(){
  evtag.textContent=""; rem.textContent="";
- var btns="";for(var i=1;i<=(CFG.N_EVAL||45);i++){var n=(i<10?'0':'')+i;var res=window.PLAN&&window.PLAN[n]&&window.PLAN[n].reserve;btns+='<a class="'+(res?'res':'')+'" href="?ev='+n+'">Evaluator '+n+(res?' (reserve)':'')+'</a>';}
+ var btns="";for(var i=1;i<=(CFG.N_EVAL||45);i++){var n=(i<10?'0':'')+i;btns+='<a href="?ev='+n+'">Evaluator '+n+'</a>';}
  app.innerHTML='<div class="card"><h1>Evaluation workshop — '+(CFG.TITRE||'')+'</h1>'
-  +'<p>Select your evaluator number (or scan the QR code you were given). Evaluators 41–45 are reserve numbers: use them only if the facilitator tells you to.</p>'
+  +'<p>Select your evaluator number (or scan the QR code you were given).</p>'
   +'<div class="evgrid">'+btns+'</div></div>';
 }
-function setHeadFoot(extra){ evtag.textContent="Evaluator "+EV; rem.textContent="Evaluator "+EV+(extra?" · "+extra:"")+" · "+(CFG.ATELIER||""); }
+function setHeadFoot(extra){ var lab="Evaluator "+EVP+(SAISIE?" · paper entry "+SAISIE:""); evtag.textContent=lab; rem.textContent=lab+(extra?" · "+extra:"")+" · "+(CFG.ATELIER||""); }
 
 function profil(){
- app.innerHTML='<div class="card"><h1>Evaluation form — Evaluator no. '+EV+'</h1>'
+ app.innerHTML='<div class="card"><h1>Evaluation form — Evaluator no. '+EVP+'</h1>'
  +'<p class="muted">CRESI AgroecologIA · One Acre Fund (Tubura) Rwanda · two AI assistants compared per question (A / B), blind. You will evaluate <b>3 questions</b>, each with 2 answers.</p>'
  +'<p class="muted">Your answers are saved automatically on this device and on the server after every change (see the indicator at the top).</p>'
+ +(SAISIE?'<div class="missing"><b>Paper booklet data entry.</b> Type exactly what the evaluator ticked or wrote, even if it looks wrong. Leave blank what is blank on paper. If two boxes are ticked on one line, leave it blank and write it in the note below.<div class="field"><label>Your initials (data-entry operator):</label>'+txt('p_saisie_op')+'</div><div class="field"><label>Notes on this booklet (illegible, double ticks…):</label>'+txt('p_saisie_note')+'</div></div>':'')
  +'<h3>■ Evaluator profile</h3>'
  +'<p class="muted">No name is collected. Your evaluator number is the only identifier.</p>'
  +'<div class="field"><label>Evaluator code:</label>'+txt('p_code')+'</div>'
@@ -195,7 +217,7 @@ function menu(){
    +(st.complete?'<span class="done">✓ complete</span>':(st.started?'<span class="part">partial</span>':'<span class="todo">to do</span>'))+'</div>';}).join('');
  var n=QIDS.filter(function(q){return qStatus(q).complete}).length;
  app.innerHTML='<div class="card"><h1>Your 3 questions</h1>'
-  +'<p class="muted">Evaluator no. '+EV+' · please evaluate them in the order shown. Complete: <b>'+n+' / '+QIDS.length+'</b>.</p>'
+  +'<p class="muted">Evaluator no. '+EVP+' · please evaluate them in the order shown. Complete: <b>'+n+' / '+QIDS.length+'</b>.</p>'
   +'<div class="qmenu">'+rows+'</div>'
   +'<div class="nav"><button class="btn sec" onclick="go(\'profil\')">← Profile</button><button class="btn" onclick="go(\'submit\')">Finish and submit ('+n+'/'+QIDS.length+') →</button></div></div>';
  setHeadFoot("menu"); window.scrollTo(0,0);
@@ -256,7 +278,7 @@ function submitScreen(){
  +'<div id="sendmsg"></div>'
  +'<div class="nav"><button class="btn sec" onclick="go(\'menu\')">← Back to the list</button>'
  +'<button class="btn sec" onclick="dlBackup()">Download a backup (.json)</button>'
- +'<button class="btn" id="sendbtn" onclick="sendData()"'+((done.length||partial.length)?'':' disabled')+'>Submit my evaluation ✓</button></div></div>';
+ +'<button class="btn" id="sendbtn" onclick="sendData()">Submit my evaluation ✓</button></div></div>';
  setHeadFoot("submit"); window.scrollTo(0,0);
 }
 function buildPayload(kind){
@@ -268,12 +290,14 @@ function buildPayload(kind){
    SLOTS.forEach(function(slot){var q={};CRIT.forEach(function(c){q[c[0]]=store['qual'+slot+'_'+qid+'_'+c[0]]||''});
      out['qualite_'+slot]=q; out['systeme_'+slot]=map[slot]; out['id_'+slot]=(C[qid].respId||{})[map[slot]]||"";});
    return out;});
- return {atelier:CFG.ATELIER,evaluateur:EV,kind:kind||"autosave",horodatage:new Date().toISOString(),updated:store._updated||"",finished:!!store._submitted,profil:prof,questions:qs,state:store};
+ return {atelier:CFG.ATELIER,evaluateur:EV,evaluateur_livret:EVP,mode:SAISIE?("paper-entry-"+SAISIE):"online",operateur:store.p_saisie_op||"",note_saisie:store.p_saisie_note||"",kind:kind||"autosave",horodatage:new Date().toISOString(),updated:store._updated||"",finished:!!store._submitted,profil:prof,questions:qs,state:store};
 }
 window.sendData=function(){
  var msg=document.getElementById('sendmsg'), btn=document.getElementById('sendbtn');
+ var started=QIDS.filter(function(q){return qStatus(q).started}).length;
+ if(!started&&!confirm("You have not rated any question yet. Submit anyway?"))return;
  if(!CFG.ENDPOINT){msg.innerHTML='<pre>'+JSON.stringify(buildPayload('final'),null,2).replace(/</g,'&lt;')+'</pre><p class="muted">(No ENDPOINT configured: preview of what would be sent.)</p>';return;}
- btn.disabled=true; msg.innerHTML='<p>Sending… (up to 30 seconds)</p>';
+ btn.disabled=true; msg.innerHTML='<p>Sending… (up to 60 seconds)</p>';
  store._submitted=new Date().toISOString(); try{localStorage.setItem(LSKEY,JSON.stringify(store))}catch(e){}
  push('final',function(ok,err){
   if(ok){app.innerHTML='<div class="card"><h1>Thank you — your evaluation is submitted ✅</h1><p>Everything was received. A copy stays on this device.</p><button class="btn sec" onclick="dlBackup()">Download a backup</button></div>';}
@@ -295,7 +319,7 @@ function start(){
  if(!C||!Object.keys(C).length){app.innerHTML='<div class="card"><h1>Loading error</h1><p>The questionnaire data could not be loaded. Check your connection and reload the page.</p><button class="btn" onclick="location.reload()">Reload</button></div>';return;}
  if(!EV){landing();return;}
  if(!PL){app.innerHTML='<div class="card"><h1>Unknown evaluator number</h1><p>No plan exists for evaluator '+EV+'. Please check your QR code or ask the facilitator.</p><a class="btn" href="./">Back</a></div>';return;}
- LSKEY="rw_"+(CFG.ATELIER||"atelier")+"_"+EV;
+ LSKEY="rw_"+(CFG.ATELIER||"atelier")+"_"+EV+(SAISIE?"_saisie":"");
  try{var raw=localStorage.getItem(LSKEY);store=JSON.parse(raw||"{}");} catch(e){store={};}
  try{localStorage.setItem("_test","1");localStorage.removeItem("_test");}catch(e){_lsOK=false;}
  app.innerHTML='<div class="card"><p>Loading your evaluation…</p></div>';

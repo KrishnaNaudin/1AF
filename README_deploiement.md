@@ -1,82 +1,89 @@
 # Site d'évaluation en ligne — RWANDA / One Acre Fund (CRESI AgroecologIA)
 
-40 évaluateurs (+ 5 de réserve, n° 41-45) · **3 questions chacun** · **2 systèmes comparés en aveugle
+45 évaluateurs, tous au même statut · **3 questions chacun** · **2 systèmes comparés en aveugle
 par question (A / B)** parmi 3 : mistral-fast + corpus · openai sans corpus · agrillm + corpus.
-Plan contrebalancé (graine 2026, `Plan_experimental/Rwanda_plan_randomise.R`) ; la correspondance
-A/B ↔ système est **confidentielle** (`Plan_experimental/cle_devoilement.csv`, hors dépôt).
+Plan contrebalancé (graine 2026, `Plan_experimental/Rwanda_plan_randomise.R`).
 
-Tout est en anglais (interface, invite, réponses).
+Tout est en anglais (interface, invite, réponses, nuggets).
+
+## Aveugle : rien d'identifiant dans les fichiers publics
+`content.js` et `plan.js` sont lisibles par n'importe qui (code source de la page). Depuis le
+31/10/2026, les réponses y sont désignées par des **codes opaques** (`r8ae783`…), dérivés d'un sel
+secret. Les correspondances restent **hors dépôt**, dans `Plan_experimental/` :
+`cle_devoilement.csv` (évaluateur × question × A/B → système), `cle_codes_reponses.csv`
+(code → système) et `sel_codes_reponses.txt` (le sel : ne jamais le publier ni le supprimer,
+sinon les codes changent).
 
 ## ⚠ Garde-fous ajoutés après l'incident Oléiculture (réponses d'une évaluatrice perdues)
 À l'Oléiculture, les réponses ne partaient vers le Google Sheet **qu'au clic final « Envoyer »** ;
-entre-temps elles ne vivaient que dans le `localStorage` du navigateur. Une évaluatrice n'a pas
-cliqué (ou son navigateur a été vidé) : tout était perdu, récupération impossible.
+entre-temps elles ne vivaient que dans le navigateur. Une évaluatrice n'a pas cliqué (ou son
+navigateur a été vidé) : tout était perdu.
 
-Ce site corrige cela à quatre niveaux :
+1. **Sauvegarde serveur continue** : l'état complet de l'évaluateur part au Sheet 3 s après une
+   modification (au plus un envoi toutes les 20 s, jamais deux envois simultanés), à chaque
+   « Save this question ✓ », toutes les 45 s s'il reste quelque chose à envoyer, et à la
+   fermeture de l'onglet. Onglet `etat` : 1 ligne fixe par évaluateur (ligne = n° + 1) ;
+   onglet `journal` : TOUS les envois, jamais écrasés.
+2. **Restauration depuis le serveur** à l'ouverture de `?ev=07` si l'état serveur est plus récent
+   → survit à un navigateur vidé, un plantage, un changement d'appareil.
+3. **Envois arrivés dans le désordre refusés** : un ancien état ne peut pas écraser un état plus
+   récent (il reste tracé dans `journal`, colonne `accepte = 0`).
+4. **Suivi animateur en direct** : onglet `suivi` (profil rempli, Q1/Q2/Q3, dernier contact, submit).
+5. **Submit non critique** : `reponses` / `nuggets` / `ajouts` sont reconstruits depuis `etat`
+   pour tous les évaluateurs, submit ou pas.
 
-1. **Sauvegarde serveur continue** : chaque modification est envoyée au Google Sheet 2,5 s plus tard
-   (autosave), plus à chaque « Save this question ✓ », plus toutes les 45 s si quelque chose a changé,
-   plus à la fermeture de l'onglet. L'onglet `etat` garde le dernier état complet de chaque
-   évaluateur ; l'onglet `journal` garde TOUS les envois (rien n'est jamais écrasé là).
-2. **Restauration depuis le serveur** : à l'ouverture de `?ev=07`, le site demande au serveur le
-   dernier état et le reprend s'il est plus récent que la copie locale → survit à un navigateur
-   vidé, un plantage, un changement de téléphone ou d'ordinateur.
-3. **Suivi animateur en direct** : l'onglet `suivi` montre, pour chaque évaluateur, profil rempli,
-   statut Q1/Q2/Q3 (complete / partial / empty), dernier contact, submit. Pendant l'atelier (3 h en
-   ligne), l'animateur voit qui décroche et relance avant la fin.
-4. **Le bouton « Submit » n'est plus critique** : il ne fait que marquer l'évaluation terminée.
-   `rebuild()` (dans l'Apps Script) reconstruit les onglets plats `reponses` / `nuggets` / `ajouts`
-   pour TOUS les évaluateurs, submit ou pas. Sauvegarde JSON téléchargeable à tout moment ;
-   consigne d'e-mail de secours affichée sur toute erreur.
-
-Témoin à l'écran : la pastille en haut (« saved 10:42 » vert / « NOT saved on server » rouge).
+### Test de charge (31/10/2026)
+La v1 du collecteur mettait **29 à 53 s par envoi** (une écriture de ligne par nugget sous verrou
+global) : à 45 évaluateurs, la file d'attente aurait débordé et le site aurait affiché
+« NOT saved » à tort. Collecteur réécrit (v3) puis testé avec **45 évaluateurs simultanés pendant
+4 min** (`Plan_experimental/test_charge_collecteur/`) : **423 envois / 423 acceptés, 0 perte**,
+latence médiane 3,1 s (p90 6,4 s, max 37 s < délai du site 60 s) ; 5 envois volontairement
+périmés tous refusés ; 5 coupures de 60 s puis réouverture : état restauré exact ; à la fin,
+l'état serveur des 45 évaluateurs = leur dernier envoi confirmé.
 
 ## Contenu du dossier (= racine du dépôt GitHub `1AF`)
-- `index.html` — l'application (accueil → profil → 3 questions → submit)
+- `index.html` — l'application (accueil → profil → 3 questions → submit) + mode saisie papier
 - `config.js` — **seul fichier à éditer** : `ENDPOINT` (URL /exec), `TEST_MODE: false` le jour J
-- `content.js` — 12 questions, nuggets, réponses des 3 systèmes (généré par `build_site.py`)
-- `plan.js` — ordre des questions et A/B par évaluateur (généré)
-- `apps_script_Code.gs` — collecteur à coller dans le Google Sheet
+- `content.js`, `plan.js` — générés par `build_site.py` (ne pas éditer à la main)
+- `apps_script_Code.gs` — copie du collecteur (le vrai est dans le projet Apps Script)
 - `QR_evaluateurs.html` — planche des 45 QR codes
-- `build_site.py` — régénère `content.js` / `plan.js` / `cle_devoilement.csv` depuis `Plan_experimental/`
+- `build_site.py` — régénère `content.js` / `plan.js` et les clés confidentielles :
+  `python build_site.py ..` depuis ce dossier
 
-État actuel (31/10/2026) : **VERSION DE TEST** — `TEST_MODE: true`, nuggets factices, réponses
-« + corpus » remplacées par les réponses sans corpus (marquées [PROVISIONAL]), Q05-Q12 sans
-réponse. À régénérer avec `build_site.py` quand le pool et les grilles de nuggets seront complets.
+État (31/10/2026) : **VERSION DE TEST** — `TEST_MODE: true` ; nuggets = grilles provisoires
+(17 par question, atomisées sur les 84 réponses sans corpus) ; réponses « + corpus » remplacées par
+les réponses sans corpus du même modèle, marquées [PROVISIONAL].
 
-## Étape A — collecteur Google Sheet (Apps Script)
-1. Ouvrir le Google Sheet `AgroecologIA_Rwanda_1AF_evaluations` (créé le 31/10/2026 dans Mon Drive) :
-   https://docs.google.com/spreadsheets/d/1qWj4uZ7u8mK6gmo4Fci9qL8FcE0fpCBR6c-oSK755uQ/edit
-2. **Extensions → Apps Script** → coller tout `apps_script_Code.gs` → Enregistrer.
-3. **Déployer → Nouveau déploiement → Application web** : exécuter en tant que **Moi**,
-   accès **Tout le monde** → Déployer → autoriser → copier l'**URL /exec**.
-4. Coller l'URL dans `config.js` → `ENDPOINT`.
-5. Test : ouvrir `https://script.google.com/macros/s/…/exec?action=state&ev=01` dans le
-   navigateur → doit répondre `{"ok":true,"state":null}`.
-   (Le script crée les onglets au premier envoi : `journal`, `etat`, `reponses`, `nuggets`, `ajouts`, `suivi`.)
+## Collecteur (Google Sheet + Apps Script)
+- Sheet : `AgroecologIA_Rwanda_1AF_evaluations`
+  https://docs.google.com/spreadsheets/d/1qWj4uZ7u8mK6gmo4Fci9qL8FcE0fpCBR6c-oSK755uQ/edit
+- Projet Apps Script : « Collecteur AgroecologIA Rwanda 1AF » (script.google.com), version 3.
+- Mise à jour du code : coller → Enregistrer → Déployer → **Gérer les déploiements → crayon →
+  Version : Nouvelle version** → Déployer. (Un « Nouveau déploiement » changerait l'URL.)
+- `…/exec?action=rebuild` : reconstruit `reponses` / `nuggets` / `ajouts` (à ouvrir dans le
+  navigateur pendant ou après l'atelier).
+- `reinitialiser_etat_suivi()` (à lancer depuis l'éditeur, **jamais pendant l'atelier**) : vide
+  `etat` / `suivi` / onglets plats et renomme `journal` en `journal_tests_<date>`. À lancer une
+  dernière fois juste avant l'atelier pour effacer les tests.
 
-## Étape B — publier (GitHub Pages)
-Le dépôt `1AF` est créé et poussé par K. Naudin (commandes PowerShell dans la
-conversation du 31/10/2026 ou via GitHub Desktop). `index.html` à la **racine**.
-Settings → Pages → branche `main`, dossier `/ (root)`. URL : `https://krishnanaudin.github.io/1AF/` (compte GitHub **KrishnaNaudin**, PAS le compte perso).
-
-## Étape C — test à blanc (obligatoire avant l'atelier)
-1. `?ev=01` : remplir le profil, UNE question complète, « Save this question » → vérifier dans le
-   Sheet : 1 ligne `etat`, lignes `journal`, `reponses`, `nuggets`, `suivi` = Q1 complete.
-2. Vider le stockage du navigateur (ou ouvrir en navigation privée) → rouvrir `?ev=01` → les
-   réponses doivent réapparaître (« restored from server »).
-3. Submit → `suivi.submit = yes`.
-4. Supprimer les lignes de test (ou `rebuild()` après avoir vidé `etat`).
-
-## Jour J
-- `TEST_MODE: false` dans `config.js`, régénérer le contenu, pousser.
-- Distribuer les QR (1 par évaluateur ; 41-45 en réserve, donnés par l'animateur seulement).
-- Garder l'onglet `suivi` ouvert pendant les 120 min de notation.
-- À la fin : lancer `rebuild()` dans Apps Script, puis télécharger le Sheet (xlsx) dans
-  `12_Rwanda_OneAcreFund/Evaluations/` — c'est le classeur maître.
+## Publication (GitHub Pages)
+Dépôt `KrishnaNaudin/1AF` (compte **KrishnaNaudin**, PAS le compte perso), poussé par K. Naudin
+via GitHub Desktop. URL : https://krishnanaudin.github.io/1AF/
 
 ## Version papier
-Même contenu que le site, un livret PDF par évaluateur (`Kit_Atelier_RWANDA/01_Formulaires_evaluateurs/`),
-généré depuis `plan.js` + `content.js` par `build_pdf` (skill nuggets-methodo) quand le contenu sera
-définitif. La saisie des livrets papier se fait ensuite dans le même Sheet (onglet `reponses`,
-mêmes colonnes) — ne pas créer un second classeur.
+- Livrets : `Livrets_papier/build_livrets_rwanda.py` lit **les mêmes** `content.js` et `plan.js`
+  que le site (même ordre des questions, même A/B, mêmes nuggets) :
+  `python Livrets_papier/build_livrets_rwanda.py . [07 12 …]` depuis `12_Rwanda_OneAcreFund`
+  → `Livrets_papier/pdf/Booklet_evaluator_NN.pdf` (≈ 20 pages A4 chacun).
+  Tant qu'une réponse est provisoire, chaque page porte « PROVISIONAL — DO NOT PRINT ».
+- Saisie : **le même site**, même Sheet.
+  - 1re saisie : `https://krishnanaudin.github.io/1AF/?ev=07&saisie=1` → ligne de l'évaluateur 07.
+  - 2e saisie indépendante (contrôle, recommandée) : `?ev=07&saisie=2` → stockée en 507,
+    exclue de `reponses` ; comparer 07 et 507 avant analyse.
+  - L'opérateur saisit ses initiales ; colonnes `mode` et `operateur_saisie` dans `reponses`.
+
+## Jour J
+- Dernier `reinitialiser_etat_suivi()`, `TEST_MODE: false`, régénérer le contenu, pousser.
+- Distribuer les QR ; garder l'onglet `suivi` ouvert pendant la notation.
+- À la fin : `…/exec?action=rebuild`, puis télécharger le Sheet (xlsx) dans
+  `12_Rwanda_OneAcreFund/Evaluations/` — c'est le classeur maître.
