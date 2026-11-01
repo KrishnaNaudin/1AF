@@ -7,7 +7,6 @@ h1{font-size:18px;color:#005E29}
 .bar{margin:10px 0;font-size:13px}.bar input{font:inherit;width:60%;padding:6px;border:1px solid #94C11E;border-radius:6px}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
 .c{border:2px solid #94C11E;border-radius:12px;padding:10px;text-align:center;break-inside:avoid}
-.c.res{border-color:#8aa39c;background:#f3f6f5}
 .n{font-weight:700;font-size:15px;margin-bottom:6px}
 .u{font-size:9px;color:#5b6b67;word-break:break-all;margin-top:6px}
 @media print{.bar,p.hint{display:none}.grid{grid-template-columns:repeat(3,1fr)}}
@@ -21,9 +20,9 @@ h1{font-size:18px;color:#005E29}
 function render(){
   var base=document.getElementById('base').value.replace(/\/?$/,'/');
   var g=document.getElementById('grid'); g.innerHTML='';
-  for(var i=1;i<=45;i++){var n=(i<10?'0':'')+i; var url=base+'?ev='+n; var res=false;
-    var d=document.createElement('div'); d.className='c'+(res?' res':'');
-    d.innerHTML='<div class="n">Evaluator '+n+(res?' (reserve)':'')+'</div><div id="q'+n+'"></div><div class="u">'+url+'</div>';
+  for(var i=1;i<=45;i++){var n=(i<10?'0':'')+i; var url=base+'?ev='+n;
+    var d=document.createElement('div'); d.className='c';
+    d.innerHTML='<div class="n">Evaluator '+n+'</div><div id="q'+n+'"></div><div class="u">'+url+'</div>';
     g.appendChild(d);
     new QRCode(document.getElementById('q'+n),{text:url,width:150,height:150});
   }

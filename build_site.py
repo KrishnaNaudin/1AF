@@ -88,7 +88,7 @@ with open(os.path.join(OUT, "content.js"), "w", encoding="utf-8") as f:
 plan = {}
 for r in csv.DictReader(open(os.path.join(PE, "plan_randomise.csv"), encoding="utf-8")):
     ev = r["evaluateur"].replace("E", "")
-    p = plan.setdefault(ev, dict(order=[], ab={}, reserve=r["reserve"] == "oui"))
+    p = plan.setdefault(ev, dict(order=[], ab={}))   # all evaluators have the same status (no reserve)
     p["order"].append((int(r["ordre_presentation"]), r["question"]))
     p["ab"][r["question"]] = dict(A=opaque(r["question"], r["systeme_A"]), B=opaque(r["question"], r["systeme_B"]))
 for ev, p in plan.items():

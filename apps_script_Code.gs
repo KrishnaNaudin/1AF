@@ -18,6 +18,8 @@
  * Colonnes texte forcées (sinon « 01 » devenait 1 et les évaluateurs 01-09 n'étaient pas retrouvés).
  * v3 — saisie des livrets papier par le même site (?ev=07&saisie=1 → ligne de l'évaluateur 07 ;
  * ?ev=07&saisie=2 → seconde saisie de contrôle stockée en 507, exclue de `reponses`).
+ * v4 — bloc « paramètres pratiques exigés » (méthode nuggets v8, option D+E) → onglet `parametres`
+ * (1 ligne par évaluateur × question : IDs cochés séparés par « ; », ou NONE, + justification).
  *
  * Mise à jour : coller ce code → Enregistrer → Déployer → Gérer les déploiements → crayon →
  * Version : Nouvelle version → Déployer (l'URL /exec ne change pas).
@@ -80,7 +82,7 @@ function doGet(e){
     return out_({ok:true, state:st, updated:String(r[1]), finished:r[2]});
   }
   if(p.action === "rebuild"){ var n = rebuild(); return out_({ok:true, rebuilt:n}); }
-  return out_({ok:true, msg:"collecteur AgroecologIA Rwanda actif (v2)"});
+  return out_({ok:true, msg:"collecteur AgroecologIA Rwanda actif (v4)"});
 }
 
 /* ---------- reconstruction en bloc des feuilles plates ---------- */
@@ -88,7 +90,8 @@ function rebuild(){
   var ss = ss_(); var et = ss.getSheetByName("etat"); if(!et) return 0;
   var vals = et.getDataRange().getValues();
   var rep=[repHeader_()], nug=[["horodatage","evaluateur","atelier","question","ordre","nugget_id","choix"]],
-      add=[["horodatage","evaluateur","atelier","question","niveau","texte"]], n=0;
+      add=[["horodatage","evaluateur","atelier","question","niveau","texte"]],
+      par=[["horodatage","evaluateur","atelier","question","ordre","nuggets_parametres_exiges","pourquoi"]], n=0;
   for(var i=1;i<vals.length;i++){
     if(!vals[i][5]) continue;
     var data; try{ data = JSON.parse(vals[i][5]); }catch(x){ continue; }
@@ -106,9 +109,10 @@ function rebuild(){
       var ng=q.nuggets||{};
       Object.keys(ng).forEach(function(nid){ if(ng[nid]) nug.push([data.horodatage, ev, data.atelier, q.qid, q.ordre, nid, ng[nid]]); });
       (q.ajouts_libres||[]).forEach(function(a){ add.push([data.horodatage, ev, data.atelier, q.qid, a.niveau, a.texte]); });
+      if(q.parametres || q.parametres_pourquoi) par.push([data.horodatage, ev, data.atelier, q.qid, q.ordre, q.parametres||"", q.parametres_pourquoi||""]);
     });
   }
-  write_(ss,"reponses",rep); write_(ss,"nuggets",nug); write_(ss,"ajouts",add);
+  write_(ss,"reponses",rep); write_(ss,"nuggets",nug); write_(ss,"ajouts",add); write_(ss,"parametres",par);
   return n;
 }
 function write_(ss,name,rows){
@@ -145,7 +149,7 @@ function out_(obj){ return ContentService.createTextOutput(JSON.stringify(obj)).
  *  (le journal est conservé). Ne PAS lancer pendant l'atelier. */
 function reinitialiser_etat_suivi(){
   var ss = ss_();
-  ["etat","suivi","reponses","nuggets","ajouts"].forEach(function(n){ var s=ss.getSheetByName(n); if(s) ss.deleteSheet(s); });
+  ["etat","suivi","reponses","nuggets","ajouts","parametres"].forEach(function(n){ var s=ss.getSheetByName(n); if(s) ss.deleteSheet(s); });
   var j = ss.getSheetByName("journal");
   if(j) j.setName("journal_tests_" + Utilities.formatDate(new Date(), "Europe/Paris", "yyyyMMdd_HHmm"));
   sheet_(ss,"etat",H_ETAT); sheet_(ss,"suivi",H_SUIVI); sheet_(ss,"journal",H_JOUR);

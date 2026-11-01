@@ -40,7 +40,7 @@ table.nug{width:100%;border-collapse:collapse;margin-top:6px;font-size:13px}.nug
 .footer-rem{position:sticky;bottom:0;background:#eef2f0;border-top:1px solid var(--border);font-size:12px;color:var(--muted);text-align:center;padding:6px}
 .nug-mobile{display:none}pre{background:var(--dark);color:#cdeccf;padding:12px;border-radius:8px;overflow:auto;font-size:12px}
 .evgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:12px}
-.evgrid a{display:block;text-align:center;text-decoration:none;background:var(--green);color:#fff;font-weight:700;padding:12px;border-radius:10px}.evgrid a.res{background:#8aa39c}
+.evgrid a{display:block;text-align:center;text-decoration:none;background:var(--green);color:#fff;font-weight:700;padding:12px;border-radius:10px}
 .qmenu{display:flex;flex-direction:column;gap:8px;margin-top:10px}
 .qrow{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;background:#fff}
 .qrow:hover{border-color:var(--green);background:#f0faf2}.qrow .qc{font-weight:700;color:var(--green);min-width:40px}.qrow .qe{flex:1;font-size:13.5px}
@@ -48,6 +48,8 @@ table.nug{width:100%;border-collapse:collapse;margin-top:6px;font-size:13px}.nug
 .qrow .part{font-size:11px;background:#e0a800;color:#3a2b00;padding:2px 8px;border-radius:10px;white-space:nowrap}
 .qrow .todo{font-size:11px;color:var(--muted);white-space:nowrap}
 .addbtn{background:#fff;color:var(--dgreen);border:1px dashed var(--dgreen);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:13px;margin-top:6px}
+.parbox{background:#fdf8e8;border:1px solid #d6c78a;border-radius:8px;padding:10px;font-size:13px;margin:8px 0}.parbox i{color:var(--muted)}
+.pargrid{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.pargrid .opt{min-width:58px;text-align:center}.pargrid .opt.none{min-width:120px}
 .missing{background:#fff4e5;border:1px solid #e0a800;border-radius:8px;padding:10px;font-size:13px;margin:10px 0}
 @media(max-width:600px){table.nug{display:none}.nug-mobile{display:block}.nm{border:1px solid var(--border);border-radius:8px;padding:10px;margin:8px 0;background:#fff}.nm .tx{font-size:13.5px;margin-bottom:8px}.nm .row{display:flex;gap:6px;flex-wrap:wrap}.nm .row .chip{flex:1;min-width:64px;text-align:center}}
 </style></head><body>
@@ -207,8 +209,9 @@ function qStatus(qid){
  var miss=[]; var ct=C[qid];
  if(!store['know_'+qid])miss.push("your knowledge of the topic");
  var nv=ct.nuggets.filter(function(n){return !store['nug_'+qid+'_'+n.id]}).length; if(nv)miss.push(nv+" nugget(s) not rated");
+ var np=ct.nuggets.filter(function(n){return store['par_'+qid+'_'+n.id]}).length; if(!np&&!store['par_'+qid+'_none'])miss.push("practical parameters: tick the IDs, or “None of them”");
  SLOTS.forEach(function(s){CRIT.forEach(function(c){if(!store['qual'+s+'_'+qid+'_'+c[0]])miss.push("Answer "+s+": "+c[0]);});});
- var any=!!store['know_'+qid]||ct.nuggets.some(function(n){return store['nug_'+qid+'_'+n.id]})||SLOTS.some(function(s){return CRIT.some(function(c){return store['qual'+s+'_'+qid+'_'+c[0]]})});
+ var any=!!store['know_'+qid]||!!store['par_'+qid+'_none']||ct.nuggets.some(function(n){return store['par_'+qid+'_'+n.id]})||ct.nuggets.some(function(n){return store['nug_'+qid+'_'+n.id]})||SLOTS.some(function(s){return CRIT.some(function(c){return store['qual'+s+'_'+qid+'_'+c[0]]})});
  return {complete:miss.length===0, started:any, missing:miss};
 }
 function menu(){
@@ -250,6 +253,12 @@ function question(qid){
  +'<div class="sub">Your knowledge of THIS topic <span class="muted">(one box)</span></div>'+optset('know_'+qid,["Not my field","Some notions","Good command","Expert / reference"],"know")+'</div>'
  +'<div class="card"><span class="step">Step 1 — Nugget grid</span><p class="muted">A nugget is one piece of information found in the AI answers. For each line tick <b>one box</b>: Essential · Useful · Optional · Remove (redundant / off-topic / wrong) · Unclear.</p>'
  +'<table class="nug"><thead><tr><th>ID</th><th class="tx">Information (nugget)</th><th>Essential</th><th>Useful</th><th>Optional</th><th>Remove</th><th>Unclear</th></tr></thead><tbody>'+rows+'</tbody></table><div class="nug-mobile">'+mob+'</div>'
+ +'<div class="sub">■ Practical parameters required</div>'
+ +'<div class="parbox"><b>Question:</b> among the nuggets above, which ones <b>must</b> be given <b>with their practical parameters</b> (doses, dates, thresholds, frequencies, warnings) to be <i>usable in the field</i>? Tick their IDs — or <b>None of them</b>.'
+ +'<br><span style="font-size:12px"><b>Reminders</b> (read at each question): • an <b>Essential</b> nugget may need <b>no</b> parameters — a fact to know, e.g. <i>“acidic soils limit maize yields in the Rwandan highlands”</i>: you rated it Essential but you do NOT tick its ID here. • an <b>Optional</b> nugget may <b>require</b> parameters — an extra that is useless unless precise, e.g. <i>“a foliar feed can be added”</i> (useless without product rate and crop stage): you rated it Optional but you DO tick its ID here.</span></div>'
+ +'<div class="pargrid">'+ct.nuggets.map(function(n){var g='par_'+qid+'_'+n.id;return '<span class="opt'+(store[g]?' on':'')+'" data-p="'+g+'" data-q="'+qid+'" onclick="parT(this)">'+n.id+'</span>'}).join('')
+ +'<span class="opt none'+(store['par_'+qid+'_none']?' on':'')+'" data-p="par_'+qid+'_none" data-q="'+qid+'" onclick="parT(this)">None of them</span></div>'
+ +'<div class="field" style="display:block"><label>Why these ones? <span class="muted">(one short sentence)</span></label>'+tarea('par_'+qid+'_why','what makes these nuggets need parameters…')+'</div>'
  +'<div class="sub">■ Free additions — important information missing from the grid</div><p class="muted">Add missing items (up to '+MAXADD+') and tick one box per item.</p>'+adds+'</div>'
  +'<div class="card"><span class="step">Step 2 — Read and rate the two answers (A and B, random order)</span>'
  +respBlock('A')+respBlock('B')+'</div>'
@@ -264,6 +273,12 @@ window.validateQ=function(qid){
  push('question',function(ok,err){ if(!ok){box.innerHTML='<div class="missing">Saved on this device, but the server could not be reached ('+(err&&err.message)+'). Continue — it will be retried automatically; you can also download a backup from the final screen.</div>';}
    menu(); });
 };
+window.parT=function(el){var g=el.dataset.p,qid=el.dataset.q,none='par_'+qid+'_none';
+ if(store[g]){delete store[g];el.classList.remove('on');}
+ else{store[g]='1';el.classList.add('on');
+   if(g===none){C[qid].nuggets.forEach(function(n){delete store['par_'+qid+'_'+n.id]});document.querySelectorAll('[data-p^="par_'+qid+'_"]').forEach(function(o){if(o!==el)o.classList.remove('on')});}
+   else{delete store[none];var o=document.querySelector('[data-p="'+none+'"]');if(o)o.classList.remove('on');}}
+ save();};
 window.addMore=function(qid){var n=store['addn_'+qid]||1;store['addn_'+qid]=Math.min(MAXADD,n+1);save();question(qid);};
 window.openQ=function(qid){question(qid);};
 
@@ -286,7 +301,8 @@ function buildPayload(kind){
  var qs=QIDS.map(function(qid){var map=mapFor(qid), st=qStatus(qid);
    var nug={};C[qid].nuggets.forEach(function(n){nug[n.id]=store['nug_'+qid+'_'+n.id]||""});
    var adds=[];for(var i=1;i<=MAXADD;i++){if(store['add'+i+'_'+qid+'_txt'])adds.push({texte:store['add'+i+'_'+qid+'_txt'],niveau:store['add'+i+'_'+qid]||''})}
-   var out={qid:qid,ordre:QIDS.indexOf(qid)+1,statut:st.complete?"complete":(st.started?"partial":"empty"),connaissance:store['know_'+qid]||"",nuggets:nug,ajouts_libres:adds};
+   var par=C[qid].nuggets.filter(function(n){return store['par_'+qid+'_'+n.id]}).map(function(n){return n.id});
+   var out={qid:qid,ordre:QIDS.indexOf(qid)+1,parametres:store['par_'+qid+'_none']?"NONE":par.join(";"),parametres_pourquoi:store['par_'+qid+'_why']||"",statut:st.complete?"complete":(st.started?"partial":"empty"),connaissance:store['know_'+qid]||"",nuggets:nug,ajouts_libres:adds};
    SLOTS.forEach(function(slot){var q={};CRIT.forEach(function(c){q[c[0]]=store['qual'+slot+'_'+qid+'_'+c[0]]||''});
      out['qualite_'+slot]=q; out['systeme_'+slot]=map[slot]; out['id_'+slot]=(C[qid].respId||{})[map[slot]]||"";});
    return out;});
