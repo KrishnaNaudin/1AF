@@ -258,7 +258,6 @@ function question(qid){
  +'<br><span style="font-size:12px"><b>Reminders</b> (read at each question): • an <b>Essential</b> nugget may need <b>no</b> parameters — a fact to know, e.g. <i>“acidic soils limit maize yields in the Rwandan highlands”</i>: you rated it Essential but you do NOT tick its ID here. • an <b>Optional</b> nugget may <b>require</b> parameters — an extra that is useless unless precise, e.g. <i>“a foliar feed can be added”</i> (useless without product rate and crop stage): you rated it Optional but you DO tick its ID here.</span></div>'
  +'<div class="pargrid">'+ct.nuggets.map(function(n){var g='par_'+qid+'_'+n.id;return '<span class="opt'+(store[g]?' on':'')+'" data-p="'+g+'" data-q="'+qid+'" onclick="parT(this)">'+n.id+'</span>'}).join('')
  +'<span class="opt none'+(store['par_'+qid+'_none']?' on':'')+'" data-p="par_'+qid+'_none" data-q="'+qid+'" onclick="parT(this)">None of them</span></div>'
- +'<div class="field" style="display:block"><label>Why these ones? <span class="muted">(one short sentence)</span></label>'+tarea('par_'+qid+'_why','what makes these nuggets need parameters…')+'</div>'
  +'<div class="sub">■ Free additions — important information missing from the grid</div><p class="muted">Add missing items (up to '+MAXADD+') and tick one box per item.</p>'+adds+'</div>'
  +'<div class="card"><span class="step">Step 2 — Read and rate the two answers (A and B, random order)</span>'
  +respBlock('A')+respBlock('B')+'</div>'
