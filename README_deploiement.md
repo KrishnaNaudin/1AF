@@ -3,6 +3,10 @@
 45 évaluateurs, tous au même statut · **3 questions chacun** · **2 systèmes comparés en aveugle
 par question (A / B)** parmi 3 : mistral-fast + corpus · openai sans corpus · agrillm + corpus.
 Plan contrebalancé (graine 2026, `Plan_experimental/Rwanda_plan_randomise.R`).
+**Option 1 (03/11/2026)** : agrillm + corpus n'est évalué que sur Q01-Q08 (modèle plus servi par son
+hébergeur, réponses Q09-Q12 écartées) ; Q09-Q12 opposent toujours mistral-fast + corpus à openai.
+`build_site.py` ne publie que les réponses utilisées par le plan (32), voir
+`Plan_experimental/Rwanda_dimensionnement.md` §6.
 
 Tout est en anglais (interface, invite, réponses, nuggets).
 
