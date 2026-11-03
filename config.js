@@ -5,5 +5,5 @@ window.CONFIG = {
   TITRE   : "AgroecologIA — One Acre Fund (Tubura) Rwanda",
   CONTACT : "naudin@cirad.fr",
   N_EVAL  : 45,                      // 45 evaluators, all with the same status
-  TEST_MODE: true                    // shows a "TEST VERSION" banner; set to false for the workshop
+  TEST_MODE: false                   // shows a "TEST VERSION" banner; set to false for the workshop
 };

@@ -48,6 +48,9 @@ def opaque(qc, code):
 def load_resp(qcode, s):
     """Réponse réelle si elle existe, sinon repli sans corpus (provisoire), sinon None."""
     f = os.path.join(REP, f"{qcode}_{s['key']}.json")
+    fs = os.path.join(REP, f"{qcode}_{s['key']}_avec_sources.txt")   # RAG : réponse intacte + liste des documents (03/11/2026)
+    if s["rag"] and os.path.exists(f) and os.path.exists(fs):
+        d = json.load(open(f, encoding="utf-8")); return open(fs, encoding="utf-8").read(), d["raw"].get("replyUID", ""), False
     if os.path.exists(f):
         d = json.load(open(f, encoding="utf-8")); return d["raw"]["answer"], d["raw"].get("replyUID", ""), False
     if s["rag"]:
